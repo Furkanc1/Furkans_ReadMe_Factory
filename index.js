@@ -1,6 +1,7 @@
 // import ListPrompt from "inquirer/lib/prompts/list";
 
 // TODO: Include packages needed for this application
+const fs = require(`fs`);
 const inquirer = require(`inquirer`);
 const generateMarkdown = require(`./Develop/utils/generateMarkdown`);
 
@@ -21,7 +22,7 @@ const rejexEmailValidation = (value) => {
        );
         return rejexEmailValidationInner;
 }
-const vanillaJavaScriptValidation = (value) => {
+const vanillaJavaScriptEmailValidation = (value) => {
     const validDomains = [ 
         `com`, 
         `org`, 
@@ -48,7 +49,7 @@ const questions = [
     {
         type: 'input',
         message: 'What is your RepositoryName?',
-        name: `(userRepoName)`,
+        name: `title`,
         default: `User Repo Name`,
     },
     // githubUserName + githubEmail
@@ -59,64 +60,42 @@ const questions = [
         filter(value) {
             return value.toLowerCase();
         },
-            validate(value) {
-                const validDomains = [ 
-                    `com`, 
-                    `org`, 
-                    `gov`, 
-                    `edu`
-                ];
-                 // .split returns an array
-                  // .includes returns true or false (boolean)
-                    let emailAT = value.includes(`@`);
-                    if (emailAT == true) {
-                        let emailWebsite = value.split(`@`)[1];
-                        let emailDomain = emailWebsite.split(`.`)[1];
-                        let emailHasValidDomain = validDomains.includes(emailDomain);
-                        return value != `` && emailHasValidDomain == true ? true : errorString;
-                    } else {
-                        return `enter valid email`;
-                    }
-            },
+        validate(value) {
+            return vanillaJavaScriptEmailValidation(value);
+        },
     },
     {
         type: `input`,
-        name: `UserName`,
+        name: `username`,
         message: `What is your GitHub User Name?`
     },
     {
         type: 'input',
             message: 'Why did you build this project?',
-            name: 'Reasoning...',
-            default: `Personal Use`,
+            name: 'reasoning',
+            default: `personal Use`,
         },
         {
             type: 'input',
             message: 'What problem does this project solve?',
-            name: 'Problem...',
-            default: `Personal Problem`,
+            name: 'problem',
+            default: `personal Problem`,
         },
         {
             type: 'input',
             message: 'Brief description of your Project for Repository.',
-            name: 'Description',
+            name: 'description',
             default: `(insert description Here)`,
         },
         {
             type: `input`,
-            name: `App_Based question`,
+            name: `testing`,
             message: `Does this app need testing?`,
-            default: ``
-        },
-        {
-            type: `input`,
-            name: `Installation Process`,
-            message: `What are the installation instructions?`,
-            default: ``
+            default: `testing`
         },
         {
             type: `confirm`,
-            name: `preview?`,
+            name: `ifPreview`,
             message: `Do you have a valid link to either an Image, GIF, or vide of the Application?`,
             default: false
         },
@@ -126,7 +105,7 @@ const questions = [
             message: `Please enter Link of GIF, Image, or Video of Application`,
             // when" is a method if inquirer
             when(response) {
-                return response.preview == true;
+                return response.ifPreview == true;
             }
         },
         {
@@ -143,7 +122,7 @@ const questions = [
         },
         {
             type: `list`,
-            name: `License`,
+            name: `license`,
             message: `What is your repositories License`,
             choices: [
                 licenses.none,
@@ -157,28 +136,32 @@ const questions = [
         },
     ];
 
-    const generalQuestions = () => {
+    // TODO: Create a function to write README file
+    const writeToFile = (fileName, template) => {
+        fs.writeFile(fileName, template, (error => {
+                error ? console.log(error) : console.log(`README Successfully Generated! You can find it within this folder!`);
+            })
+        )
+    };
+    
+    const generateQuestions = () => {
         inquirer.prompt(questions).then((answers) => {
             console.log(`answers to questions:`, answers);
-            let generatedMarkdownTemplate = generateMarkdown(answers);
+            let Template = generateMarkdown(answers);
+            writeToFile(`generatedFromCodeReadMe.md`, Template);
             // user feedback for whatever
         }).catch((error) => {
             if (error.isTtyError) {
                 console.log(`there was an issue rendering in current environment `);
             } else {
-            
+                console.log(`there was some other error`);
             };
         });
     }
 
-// TODO: Create a function to write README file
-const writeToFile = (fileName, data) => {
-    FileSystem.writeFile(`GeneratedREADME.md`, generateMarkdown)
-};
-
 // TODO: Create a function to initialize app
 const init = () => {
-    generalQuestions();
+    generateQuestions();
 };
 
 // Function call to initialize app
